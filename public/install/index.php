@@ -10,7 +10,10 @@ if (file_exists(__DIR__ . '/../../install.lock')) {
 }
 
 // 【最高优先级】AJAX 数据库测试（不依赖 step 参数，放在最开头）
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['db_host'])) {
+// 注意：第三步 POST 也带 db_host，但第三步有 step=3，所以这里要排除
+// 只有 JS 的 fetch 请求触发（无 GET step 参数，因为 fetch 用 window.location.pathname）
+// 表单提交（?step=3、?step=4）不会被拦截
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['db_host']) && !isset($_GET['step'])) {
     header('Content-Type: application/json');
     try {
         $dsn = sprintf("mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4",
