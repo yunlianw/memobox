@@ -58,8 +58,8 @@ $dirsWritable = [
         .header h1 { font-size: 22px; margin-bottom: 4px; }
         .header p { font-size: 13px; opacity: .85; }
         .steps { display: flex; padding: 0 32px; margin-top: -12px; position: relative; z-index: 1; }
-        .step { flex: 1; text-align: center; font-size: 12px; color: #94a3b8; position: relative; }
-        .step .num { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+        .step { flex: 1; text-align: center; font-size: 12px; color: #94a3b8; }
+        .step .num { display: flex; width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; margin: 0 auto 4px; }
         .step.active .num { background: #6366f1; color: #fff; }
         .step.done .num { background: #22c55e; color: #fff; }
         .step.active { color: #6366f1; font-weight: 600; }
