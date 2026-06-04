@@ -253,14 +253,14 @@ $dirsWritable = [
             $configTemplate = file_get_contents(__DIR__ . '/../../app/Config.example.php');
             if (!$configTemplate) throw new Exception('找不到配置模板 Config.example.php');
 
-            $configContent = strtr($configTemplate, [
-                'const DB_USER = "memobox_user";' => 'const DB_USER = "' . addslashes($_POST['db_user']) . '";',
-                'const DB_PASS = "your_password_here";' => 'const DB_PASS = "' . addslashes($_POST['db_pass']) . '";',
-                'const DB_NAME = "memobox";' => 'const DB_NAME = "' . addslashes($_POST['db_name']) . '";',
-                'const DB_HOST = "127.0.0.1";' => 'const DB_HOST = "' . addslashes($_POST['db_host']) . '";',
-                'const DB_PORT = 3306;' => 'const DB_PORT = ' . (int)$_POST['db_port'] . ';',
-                'const ADMIN_PATH = "yunlian";' => 'const ADMIN_PATH = "' . $adminDir . '";',
-            ]);
+            // 用稳健方式替换：直接替换关键值，不依赖完整行匹配
+            $configContent = $configTemplate;
+            $configContent = str_replace('"memobox_user"', '"' . addslashes($_POST['db_user']) . '"', $configContent);
+            $configContent = str_replace('"your_password_here"', '"' . addslashes($_POST['db_pass']) . '"', $configContent);
+            $configContent = str_replace('"memobox"', '"' . addslashes($_POST['db_name']) . '"', $configContent);
+            $configContent = str_replace('"127.0.0.1"', '"' . addslashes($_POST['db_host']) . '"', $configContent);
+            $configContent = str_replace('const DB_PORT = 3306;', 'const DB_PORT = ' . (int)$_POST['db_port'] . ';', $configContent);
+            $configContent = str_replace('"yunlian"', '"' . $adminDir . '"', $configContent);
 
             file_put_contents(__DIR__ . '/../../app/Config.php', $configContent);
 
