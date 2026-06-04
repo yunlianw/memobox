@@ -138,20 +138,6 @@
         </div>
     </div>
     
-    <!-- 备份与导出 -->
-    <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:2px solid #34c759;">
-        <h3 style="font-size:16px;margin-bottom:8px;color:#34c759;">📦 备份与导出</h3>
-        <p style="font-size:13px;color:#86868b;margin-bottom:16px;">一键打包数据库 SQL + 存储文件，5 分钟即可迁移至新服务器</p>
-        <form method="POST" action="/<?= Config::ADMIN_PATH ?>
-            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
-            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">/settings" onsubmit="return confirm('确认开始备份？可能需要几秒钟...')">
-            <input type="hidden" name="action" value="backup">
-            <button type="submit" class="btn" style="background:#34c759;color:#fff;">⬇️ 生成并下载备份包</button>
-            <p style="font-size:11px;color:#86868b;margin-top:6px;">包含：数据库完整 SQL + storage/files/ 目录所有文件</p>
-        </form>
-    </div>
-</div>
-
 <script>
 function toggleHomepageCustom(radio) {
     document.getElementById('homepage-custom').style.display = radio.checked ? 'block' : 'none';

@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `ip_blocks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 插入默认系统设置
-INSERT INTO `system_settings` (`setting_key`, `setting_value`) VALUES
+INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_value`) VALUES
   ('homepage_mode', '404'),
   ('homepage_html', ''),
   ('share_error_mode', 'default'),

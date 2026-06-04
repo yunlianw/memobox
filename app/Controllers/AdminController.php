@@ -610,11 +610,6 @@ class AdminController {
                 $shareDomain = trim($_POST['share_domain']);
             }
             
-            // 备份导出
-            if (($_POST['action'] ?? '') === 'backup') {
-                self::generateBackup();
-                return;
-            }
             
             // 账户修改（需验证当前密码）
             $currentPass = $_POST['current_password'] ?? '';
@@ -687,74 +682,6 @@ class AdminController {
      * - 有 gzencode → 打包成 .sql.gz（压缩后下载）
      * - 都不行 → 直接下 .sql
      */
-    private static function generateBackup(): void {
-        $conn = Config::getDB();
-        $timestamp = date('Ymd_His');
-        
-        // 1. 导出数据库 SQL
-        $sqlContent = "-- MemoBox Backup {$timestamp}\n";
-        $tables = $conn->query("SHOW TABLES")->fetchAll(\PDO::FETCH_COLUMN);
-        foreach ($tables as $table) {
-            $create = $conn->query("SHOW CREATE TABLE `{$table}`")->fetch();
-            $sqlContent .= "\nDROP TABLE IF EXISTS `{$table}`;\n";
-            $sqlContent .= $create['Create Table'] . ";\n\n";
-            $rows = $conn->query("SELECT * FROM `{$table}`");
-            while ($row = $rows->fetch(\PDO::FETCH_ASSOC)) {
-                $cols = array_map(function($c) { return "`{$c}`"; }, array_keys($row));
-                $vals = array_map(function($v) use ($conn) {
-                    return $v === null ? 'NULL' : $conn->quote($v);
-                }, array_values($row));
-                $sqlContent .= "INSERT INTO `{$table}` (" . implode(', ', $cols) . ") VALUES (" . implode(', ', $vals) . ");\n";
-            }
-        }
-        
-        // 2. 优先用 ZipArchive（纯 PHP 扩展，Ubuntu/Debian 需 apt install php-zip）
-        if (class_exists('\\ZipArchive')) {
-            $tmpFile = tempnam(sys_get_temp_dir(), 'membox_');
-            $zip = new \ZipArchive();
-            if ($zip->open($tmpFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
-                $zip->addFromString('backup_' . $timestamp . '.sql', $sqlContent);
-                // 收集 storage/files/ 里的文件
-                $storageDir = Config::STORAGE_PATH;
-                if (is_dir($storageDir)) {
-                    $files = new \RecursiveIteratorIterator(
-                        new \RecursiveDirectoryIterator($storageDir, \RecursiveDirectoryIterator::SKIP_DOTS),
-                        \RecursiveIteratorIterator::LEAVES_ONLY
-                    );
-                    foreach ($files as $file) {
-                        if (!$file->isDir()) {
-                            $zip->addFile($file->getPathname(), 'files/' . $file->getBasename());
-                        }
-                    }
-                }
-                $zip->close();
-                header("Content-Type: application/zip");
-                header("Content-Disposition: attachment; filename=\"membox_backup_{$timestamp}.zip\"");
-                header("Content-Length: " . filesize($tmpFile));
-                readfile($tmpFile);
-                @unlink($tmpFile);
-                exit;
-            }
-        }
-        
-        // 3. 没有 ZipArchive → 用 gzencode（PHP 内置，无需额外扩展）
-        if (function_exists('gzencode')) {
-            $compressed = gzencode($sqlContent, 9);
-            header("Content-Type: application/gzip");
-            header("Content-Disposition: attachment; filename=\"membox_backup_{$timestamp}.sql.gz\"");
-            header("Content-Length: " . strlen($compressed));
-            echo $compressed;
-            exit;
-        }
-        
-        // 4. 兜底：直接输出 SQL
-        header("Content-Type: application/sql");
-        header("Content-Disposition: attachment; filename=\"membox_backup_{$timestamp}.sql\"");
-        header("Content-Length: " . strlen($sqlContent));
-        echo $sqlContent;
-        exit;
-    }
-    
     /**
      * 安全设置页面
      */
