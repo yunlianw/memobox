@@ -3,10 +3,17 @@
  * MemoBox 私密知识库系统 - 安装向导
  */
 
-// 防止重复安装
-if (file_exists(__DIR__ . '/../../install.lock')) {
-    header('Location: /');
-    exit;
+// 防止重复安装：验证 install.lock 内容完整性
+$lockFile = __DIR__ . '/../../install.lock';
+if (file_exists($lockFile)) {
+    $lockData = json_decode(file_get_contents($lockFile), true);
+    if (is_array($lockData) && isset($lockData['installed_at'])) {
+        header('Location: /');
+        exit;
+    } else {
+        // lock 文件损坏，删除后继续
+        unlink($lockFile);
+    }
 }
 
 // 【最高优先级】AJAX 数据库测试（不依赖 step 参数，放在最开头）
@@ -320,6 +327,9 @@ $dirsWritable = [
                 <div class="big-icon">🎉</div>
                 <h2>安装完成！</h2>
                 <p>MemoBox 已成功安装部署。</p>
+                <div class="warning" style="background:#fff3cd;border:1px solid #ffecb5;border-radius:8px;padding:12px;margin:16px 0;font-size:13px;color:#856404;">
+                    ⚠️ <b>安全提示：</b>请手动删除 <code>/public/install/</code> 目录，防止被重新安装！
+                </div>
 
                 <div class="info-card">
                     <div class="label">后台地址</div>

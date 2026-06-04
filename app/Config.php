@@ -35,6 +35,16 @@ class Config {
     ];
     
     public static function init() {
+        // Session 安全配置
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.cookie_samesite', 'Lax');
+        ini_set('session.gc_maxlifetime', '28800');  // 8小时后回收
+        
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+            ini_set('session.cookie_secure', '1');
+        }
+        
         date_default_timezone_set('Asia/Shanghai');
         
         if (session_status() === PHP_SESSION_NONE) {

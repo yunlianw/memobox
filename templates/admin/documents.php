@@ -32,6 +32,7 @@
     </div>
 
     <form method="POST" action="" id="batch-form">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
         <?php if (empty($docs)): ?>
             <div style="text-align:center;color:#86868b;padding:80px;font-size:14px;background:#fff;border-radius:12px;">
                 <?php if (!empty($_GET['search'])): ?>

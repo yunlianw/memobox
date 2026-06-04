@@ -41,7 +41,8 @@
     <!-- 清空日志 -->
     <div style="background:#fff;border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
         <div>
-            <form method="POST" action="/<?= Config::ADMIN_PATH ?>/logs" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <form method="POST" action="/<?= Config::ADMIN_PATH ?>
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">/logs" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                 <input type="hidden" name="action" value="clear">
                 <input type="hidden" name="type" value="<?= htmlspecialchars($_GET['type'] ?? 'admin') ?>">
                 <select name="clear_before" style="padding:6px 10px;border:1px solid #d2d2d7;border-radius:8px;font-size:13px;">

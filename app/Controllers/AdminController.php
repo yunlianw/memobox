@@ -77,13 +77,14 @@ class AdminController {
             
             if ($isFirstRun) {
                 // 首次安装：创建管理员
-                if (strlen($password) < 6) {
-                    $error = '密码至少6位';
-                    include __DIR__ . '/../../templates/admin/login.php';
-                    return;
+                if (strlen($password) < 8) {
+                    $error = '密码至少8位，且必须包含大小写字母和数字';
+                } elseif (!preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/\d/', $password)) {
+                    $error = '密码必须包含大小写字母和数字（例如：Abc12345）';
+                } else {
+                    User::create($username, $password);
+                    $user = User::login($username, $password);
                 }
-                User::create($username, $password);
-                $user = User::login($username, $password);
             } else {
                 $user = User::login($username, $password);
             }
@@ -243,6 +244,12 @@ class AdminController {
             $currentExpireSeconds = $diff > 0 ? $diff : null;
         }
 
+        require_once __DIR__ . '/../Models/Setting.php';
+        $shareDomain = Setting::get('share_domain', '');
+        if ($shareDomain === '') {
+            $shareDomain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '127.0.0.1';
+        }
+        
         include __DIR__ . '/../../templates/admin/edit_share.php';
     }
 
@@ -273,11 +280,18 @@ class AdminController {
                 <p><a href="' . htmlspecialchars($doc['link_url']) . '" target="_blank" style="color:#007aff;">' . htmlspecialchars($doc['link_url']) . '</a></p>
             </div>';
         } elseif ($doc['content_type'] === 'html') {
-            // HTML 源码模式：预览直接输出原始内容
+            // HTML 源码模式：用 iframe sandbox 隔离，防止 XSS 执行
             if (ob_get_level()) {
                 ob_end_clean();
             }
-            echo $doc['content_md'];
+            header("Content-Security-Policy: default-src 'self' 'unsafe-inline'; script-src 'none'");
+            echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>HTML 预览（沙箱）</title>';
+            echo '<style>body{margin:0;padding:0;background:#f5f5f7;}</style></head><body>';
+            echo '<iframe sandbox="allow-same-origin allow-styles" ';
+            echo 'style="width:100%;height:95vh;border:1px solid #d2d2d7;border-radius:12px;background:#fff;" ';
+            echo 'srcdoc="' . htmlspecialchars($doc['content_md'], ENT_QUOTES | ENT_HTML5, 'UTF-8') . '">';
+            echo '</iframe>';
+            echo '</body></html>';
             exit;
         } else {
             require_once __DIR__ . '/../Services/Parsedown.php';
@@ -309,6 +323,7 @@ class AdminController {
      */
     private static function shares(array $query): void {
         $userId = $_SESSION['user']['id'];
+        require_once __DIR__ . '/../Models/Setting.php';
         
         // 批量删除
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_batch'])) {
@@ -367,16 +382,34 @@ class AdminController {
             
             $destroyDelay = isset($_POST["destroy_delay_enabled"]) ? (int)($_POST["destroy_delay_minutes"] ?? 0) : 0;
             
-            $token = Share::create($userId, $docId ?: null, $fileId ?: null, $password, $maxClicks, $expireSeconds, $destroyDelay);
-            $shareUrl = "https://fx.5276.net/?action=share&token=$token";
+            $shareDomain = Setting::get('share_domain', '');
+            if ($shareDomain === '') {
+                $shareDomain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '127.0.0.1';
+            }
             
-            $createdShare = true;
+            $token = Share::create($userId, $docId ?: null, $fileId ?: null, $password, $maxClicks, $expireSeconds, $destroyDelay);
+            $shareUrl = "https://{$shareDomain}/?action=share&token=$token";
+            
+            Router::redirect("/" . Config::ADMIN_PATH . "/shares?created=1&token=$token");
+            return;
         }
         
         $search = $_GET['search'] ?? null;
         $shares = Share::getListByUser($userId, $search);
         $docs = Document::getList($userId);
         $files = File::getListByUser($userId);
+        
+        // 计算分享域名（用于模板）
+        $shareDomain = Setting::get('share_domain', '');
+        if ($shareDomain === '') {
+            $shareDomain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '127.0.0.1';
+        }
+        
+        // 创建分享后 redirect 回来的显示（GET参数）
+        if (isset($_GET['created']) && isset($_GET['token'])) {
+            $createdShare = true;
+            $shareUrl = "https://{$shareDomain}/?action=share&token=" . htmlspecialchars($_GET['token']);
+        }
         
         include __DIR__ . '/../../templates/admin/shares.php';
     }
@@ -551,6 +584,7 @@ class AdminController {
         $homepageHtml = Setting::get('homepage_html', '');
         $shareErrorMode = Setting::get('share_error_mode', 'default');
         $shareErrorHtml = Setting::get('share_error_html', '');
+        $shareDomain = Setting::get('share_domain', '');
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 伪装设置保存
@@ -564,6 +598,13 @@ class AdminController {
                 $homepageHtml = $_POST['homepage_html'] ?? '';
                 $shareErrorMode = $_POST['share_error_mode'] ?? 'default';
                 $shareErrorHtml = $_POST['share_error_html'] ?? '';
+            }
+            
+            // 分享域名保存
+            if (isset($_POST['share_domain'])) {
+                Setting::set('share_domain', trim($_POST['share_domain']));
+                $success = '分享域名已保存';
+                $shareDomain = trim($_POST['share_domain']);
             }
             
             // 备份导出
@@ -586,10 +627,16 @@ class AdminController {
                     Log::admin($userId, 'update_username', '管理员更改为: ' . $newUser, 'user', $userId);
                     $success = '用户名已更新';
                 }
-                if (!empty($newPass) && strlen($newPass) >= 6) {
+                if (!empty($newPass) && strlen($newPass) >= 8 && preg_match('/[A-Z]/', $newPass) && preg_match('/[a-z]/', $newPass) && preg_match('/\d/', $newPass)) {
                     User::updatePassword($userId, $newPass);
                     Log::admin($userId, 'update_password', '密码已修改', 'user', $userId);
                     $success = ($success ?? '') . ' 密码已更新';
+                } elseif (!empty($newPass) && (!preg_match('/[A-Z]/', $newPass) || !preg_match('/[a-z]/', $newPass) || !preg_match('/\d/', $newPass))) {
+                    $error = '新密码必须包含大小写字母和数字（例如：Abc12345）';
+                    $success = $newUser ? '用户名已更新' : '';
+                } elseif (!empty($newPass) && strlen($newPass) < 8) {
+                    $error = '新密码至少8位';
+                    $success = $newUser ? '用户名已更新' : '';
                 }
                 if (empty($newUser) && empty($newPass)) {
                     $error = '未填写新用户名或新密码';

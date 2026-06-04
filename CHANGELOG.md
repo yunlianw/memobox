@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.2] - 2026-06-04
+
+### 🔒 安全修复（9项）
+
+**P0 高危修复：**
+1. **CSRF Token 防护** — 所有后台POST操作添加Token验证（Security.php + Router.php + 6个模板）
+2. **XSS（html文档）** — 预览用iframe sandbox隔离，分享页加CSP头
+3. **文件上传MIME验证** — 扩展名白名单 + finfo真实类型检测 + 图片二次验证
+4. **文件上传路径遍历** — serveStatic()用realpath()防`../`穿越
+
+**P1/P2 中危修复：**
+5. **会话安全配置** — 添加cookie_httponly / SameSite / secure（Config.php）
+6. **调试头信息泄露** — 删除X-Query-Debug、X-Share-Matched、X-Share-Error
+7. **分享密码表单** — GET改为POST，密码不在URL暴露
+8. **密码策略加强** — 强制≥8位+大小写+数字
+
+**P3 低危修复：**
+9. **install.lock加固** — 验证JSON内容完整性，安装完成提示删除install/
+
+---
+
 ## [1.0.1] - 2026-06-04
 
 ### 🐛 Bug 修复

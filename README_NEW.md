@@ -40,7 +40,7 @@
 ├── storage/files/           # 文件存储目录
 ├── templates/              # 视图模板
 │   ├── admin/              # 后台页面
-│   └── share/              # 分享页面
+│   └── share/               # 分享页面
 ├── CHANGELOG.md            # 更新日志
 ├── README.md               # 本文档
 ├── SECURITY_AUDIT.md        # 安全审查报告
@@ -60,7 +60,7 @@
 宝塔 → 网站 → 设置 → 运行目录 → 选择 `/public` → 保存
 
 **第三步：设置伪静态**
-宝塔 → 网站 → 设置 → 伪静态 → 粘贴以下内容 → 保存：
+宝塔 → 网站 → 设置 → 伪静态 → 粘贴以下内容 → 保存
 
 ```nginx
 location / {
@@ -110,7 +110,7 @@ server {
 
     # 【必须】PHP 处理
     location ~ \.php$ {
-        fastcgi_pass unix:/tmp/php-cgi-85.sock;  # ← 根据你的 PHP 版本调整
+        fastcgi_pass  unix:/tmp/php-cgi-85.sock;  # ← 根据你的 PHP 版本调整
         fastcgi_index index.php;
         include fastcgi.conf;
     }
@@ -135,7 +135,7 @@ FLUSH PRIVILEGES;
 
 ---
 
-## 🔧 常见问题
+## 🚧 常见问题
 
 **Q：安装时「测试连接」失败？**
 A：检查数据库名/用户名/密码是否正确；确认 MySQL 服务正在运行；确认数据库用户有权限访问该数据库。
@@ -265,3 +265,11 @@ Memobox 采用**传统 MVC 分离模式**：
 1. **无 CSRF Token**（中危）—— 建议下版本添加
 2. **无会话超时**（中危）—— 建议下版本添加
 3. 其余均为低危或信息级别，当前场景风险可控
+
+ENDREADME'
+
+mv /www/wwwroot/fx.5276.net/README.md /www/wwwroot/fx.5276.net/README.md.bak
+mv /www/wwwroot/fx.5276.net/README_NEW.md /www/wwwroot/fx.5276.net/README.md
+
+echo "=== README.md 已更新 ==="
+wc -l /www/wwwroot/fx.5276.net/README.md

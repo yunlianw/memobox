@@ -31,9 +31,11 @@
     <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04);margin-bottom:24px;">
         <h3 style="font-size:16px;margin-bottom:16px;">🎭 全站伪装控制中心</h3>
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
             <!-- 首页伪装 -->
             <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #f5f5f7;">
-                <label style="font-weight:600;display:block;margin-bottom:8px;">首页（fx.5276.net/）伪装切换</label>
+                <label style="font-weight:600;display:block;margin-bottom:8px;">首页（<?= htmlspecialchars($_SERVER['HTTP_HOST'] ?? 'yourdomain.com') ?>/）伪装切换</label>
                 <div style="display:flex;gap:16px;flex-wrap:wrap;">
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                         <input type="radio" name="homepage_mode" value="404" <?= ($homepageMode ?? '404') === '404' ? 'checked' : '' ?>>
@@ -73,10 +75,25 @@
         </form>
     </div>
     
+    <!-- 分享域名设置 -->
+    <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04);margin-bottom:24px;">
+        <h3 style="font-size:16px;margin-bottom:16px;">🔗 分享域名设置</h3>
+        <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
+            <div class="form-group">
+                <label style="font-weight:600;display:block;margin-bottom:8px;">分享域名（留空则自动检测）</label>
+                <input type="text" name="share_domain" value="<?= htmlspecialchars($shareDomain ?? '') ?>" placeholder="例如：share.example.com" style="width:100%;padding:10px 12px;border:1px solid #d2d2d7;border-radius:8px;font-size:14px;">
+                <p style="font-size:12px;color:#86868b;margin-top:4px;">设置后，所有分享链接将使用此域名。需先将域名解析到服务器，支持隐藏真实平台地址。</p>
+            </div>
+            <button type="submit" class="btn">保存分享域名</button>
+        </form>
+    </div>
+    
     <!-- 账户设置 -->
     <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04);margin-bottom:24px;">
         <h3 style="font-size:16px;margin-bottom:16px;">👤 账户设置</h3>
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
             <div class="form-group">
                 <label>当前用户名</label>
                 <input type="text" value="<?= htmlspecialchars($_SESSION['user']['username']) ?>" disabled style="width:100%;max-width:400px;padding:10px 14px;border:1px solid #d2d2d7;border-radius:10px;font-size:15px;background:#f5f5f7;">
@@ -120,7 +137,8 @@
     <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:2px solid #34c759;">
         <h3 style="font-size:16px;margin-bottom:8px;color:#34c759;">📦 备份与导出</h3>
         <p style="font-size:13px;color:#86868b;margin-bottom:16px;">一键打包数据库 SQL + 存储文件，5 分钟即可迁移至新服务器</p>
-        <form method="POST" action="/<?= Config::ADMIN_PATH ?>/settings" onsubmit="return confirm('确认开始备份？可能需要几秒钟...')">
+        <form method="POST" action="/<?= Config::ADMIN_PATH ?>
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">/settings" onsubmit="return confirm('确认开始备份？可能需要几秒钟...')">
             <input type="hidden" name="action" value="backup">
             <button type="submit" class="btn" style="background:#34c759;color:#fff;">⬇️ 生成并下载备份包</button>
             <p style="font-size:11px;color:#86868b;margin-top:6px;">包含：数据库完整 SQL + storage/files/ 目录所有文件</p>

@@ -24,10 +24,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
     <?php if (!empty($error)): ?>
         <div class="error"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
-    <form method="GET" action="">
+    <form method="POST" action="">
+        <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
         <input type="hidden" name="action" value="share">
         <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
-        <input type="text" name="password" placeholder="输入密码" maxlength="10" autofocus>
+        <input type="password" name="password" placeholder="输入密码" maxlength="10" autofocus>
         <button type="submit" class="btn">验证</button>
     </form>
 </div>

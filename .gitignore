@@ -15,3 +15,15 @@ vendor/
 .env
 .idea/
 .vscode/
+
+# 安全审计报告（本地生成）
+SECURITY_AUDIT.md
+SECURITY_AUDIT_FINAL.md
+
+# 备份文件
+*.backup.*
+db.php.backup
+
+# PHP 配置
+.user.ini
+SECURITY_AUDIT.md

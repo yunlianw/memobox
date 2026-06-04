@@ -16,6 +16,7 @@
 
 <div class="container">
     <form method="POST" action="" id="doc-form">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
         <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;">
             <input type="text" name="title" placeholder="文档标题" value="<?= htmlspecialchars($doc['title'] ?? '') ?>" required style="flex:1;padding:10px 14px;border:1px solid #d2d2d7;border-radius:10px;font-size:15px;">
             <select name="type" id="doc-type-select" onchange="toggleEditorMode(this)" style="padding:10px;border:1px solid #d2d2d7;border-radius:10px;font-size:14px;">

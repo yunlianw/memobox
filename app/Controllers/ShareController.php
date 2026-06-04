@@ -14,10 +14,8 @@ class ShareController {
      * 处理分享请求
      */
     public static function handle(array $query): void {
-        // 调试：确认是否进入分享路由
-        header('X-Share-Handler: YES');
         $token = $query['token'] ?? '';
-        $password = $query['password'] ?? '';
+        $password = $_POST['password'] ?? $query['password'] ?? '';
         
         // 获取分享
         $share = Share::getByToken($token);
@@ -120,6 +118,7 @@ class ShareController {
             if (ob_get_level()) {
                 ob_end_clean();
             }
+            header("Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src 'self'; img-src * data:; font-src 'self' data:");
             echo $htmlContent;
             exit;
         }

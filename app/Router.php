@@ -42,6 +42,18 @@ class Router {
             return;
         }
         
+        // CSRF 验证：所有 POST 请求（排除登录接口）
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $isLogin = (strpos($path, '/' . Config::ADMIN_PATH) === 0 && isset($query['action']) && $query['action'] === 'login');
+            if (!$isLogin) {
+                $csrfToken = $_POST['csrf_token'] ?? '';
+                if (!Security::verifyCsrfToken($csrfToken)) {
+                    http_response_code(403);
+                    die('CSRF validation failed');
+                }
+            }
+        }
+        
         // ===== 路由判断 =====
         
         // 0. 文件预览路由（后台管理，需登录）：/yunlian/file?key=xxx
@@ -77,9 +89,7 @@ class Router {
         }
         
         // 2. 分享路由：action=share&token=xxx
-        header('X-Query-Debug: ' . urlencode(print_r($query, true)));
         if (isset($query['action']) && $query['action'] === 'share' && isset($query['token'])) {
-            header('X-Share-Matched: YES');
             self::routeShare($query);
             return;
         }
@@ -187,9 +197,6 @@ class Router {
     require_once __DIR__ . '/Models/Setting.php';
     $mode = Setting::get('share_error_mode', 'default');
         
-    // 调试头：标记分享错误分支
-    header('X-Share-Error: ' . $mode);
-        
     if ($mode === 'custom') {
     // 自定义 HTML 提示页
     $html = Setting::get('share_error_html', '');
@@ -257,6 +264,20 @@ class Router {
     * 提供静态文件
     */
     private static function serveStatic(string $filePath): void {
+    // 规范化路径，防止 ../ 穿越
+    $realPath = realpath($filePath);
+    $allowedDir = realpath(Config::ROOT_PATH . '/assets/');
+    
+    if ($realPath === false || $allowedDir === false || strpos($realPath, $allowedDir) !== 0) {
+        self::show404();
+        return;
+    }
+    
+    if (!file_exists($realPath)) {
+        self::show404();
+        return;
+    }
+    
     $mimeTypes = [
     'css' => 'text/css',
     'js'  => 'application/javascript',
@@ -268,16 +289,16 @@ class Router {
     'txt' => 'text/plain',
     ];
         
-    $ext = pathinfo($filePath, PATHINFO_EXTENSION);
+    $ext = pathinfo($realPath, PATHINFO_EXTENSION);
     $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
         
     // robots.txt 不缓存，其他静态资源可缓存
-    $isRobots = basename($filePath) === 'robots.txt';
+    $isRobots = basename($realPath) === 'robots.txt';
     $cacheHeader = $isRobots ? 'no-cache' : 'public, max-age=86400';
         
     header("Content-Type: $mime");
     header("Cache-Control: $cacheHeader");
-    readfile($filePath);
+    readfile($realPath);
     exit;
     }
     }

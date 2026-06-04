@@ -41,6 +41,7 @@
             </div>
         <?php else: ?>
             <form method="post" id="batch-form-2">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
                 <input type="hidden" name="delete_batch" value="1">
                 <table>
                     <tr>

@@ -25,9 +25,10 @@
 
     <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
             <div class="form-group">
                 <label>分享链接（不可修改）</label>
-                <input type="text" value="https://fx.5276.net/?action=share&token=<?= htmlspecialchars($share['share_token']) ?>" 
+                <input type="text" value="https://<?= htmlspecialchars($shareDomain ?? ($_SERVER['HTTP_HOST'] ?? '127.0.0.1')) ?>/?action=share&token=<?= htmlspecialchars($share['share_token']) ?>" 
                        style="width:100%;padding:8px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px;color:#86868b;background:#f9f9f9;" readonly>
             </div>
 

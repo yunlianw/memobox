@@ -106,6 +106,7 @@ INSERT INTO `system_settings` (`setting_key`, `setting_value`) VALUES
   ('homepage_mode', '404'),
   ('homepage_html', ''),
   ('share_error_mode', 'default'),
-  ('share_error_html', '');
+  ('share_error_html', ''),
+  ('share_domain', '');
 
 COMMIT;

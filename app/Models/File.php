@@ -11,12 +11,58 @@ class File {
     public static function upload(int $userId, array $uploadedFile): int {
         $pdo = Config::getDB();
         
+        // === 扩展名白名单验证 ===
+        $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp',
+            'pdf', 'doc', 'docx', 'xls', 'xlsx',
+            'zip', 'rar', '7z',
+            'mp4', 'mp3', 'webm', 'ogg',
+            'txt', 'md'];
+        $ext = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowedExts)) {
+            throw new Exception('不允许的文件类型：' . htmlspecialchars($ext));
+        }
+        
+        // === 文件名安全处理（去除路径）===
+        $originalName = basename($uploadedFile['name']);
+        $originalName = preg_replace('/[^\w.\-]/u', '_', $originalName);
+        if (empty($originalName)) {
+            $originalName = 'unnamed_file.' . $ext;
+        }
+        
+        // === 真实 MIME 类型验证 ===
+        if (function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $realMime = finfo_file($finfo, $uploadedFile['tmp_name']);
+            finfo_close($finfo);
+            
+            $allowedMimes = [
+                'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed',
+                'video/mp4', 'audio/mpeg', 'audio/ogg',
+                'text/plain',
+            ];
+            if (!in_array($realMime, $allowedMimes)) {
+                throw new Exception('文件 MIME 类型不匹配：' . htmlspecialchars($realMime));
+            }
+            
+            // 图片类型再用 getimagesize 验证
+            if (in_array($realMime, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'])) {
+                $imgInfo = @getimagesize($uploadedFile['tmp_name']);
+                if ($imgInfo === false) {
+                    throw new Exception('无效的图片文件');
+                }
+            }
+        }
+        
         $storedName = Security::generateToken(16) . '_' . time();
-        $ext = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION);
         $storedName .= '.' . $ext;
         $destPath = Config::STORAGE_PATH . $storedName;
         
-        // 移动文件
         move_uploaded_file($uploadedFile['tmp_name'], $destPath);
         
         // 用扩展名判断 MIME 类型（避免依赖 mime_content_type 扩展）
@@ -33,8 +79,6 @@ class File {
         ];
         $mimeType = $mimeMap[$ext] ?? 'application/octet-stream';
 
-        $mimeType = $mimeMap[$ext] ?? 'application/octet-stream';
-
         // 生成 file_key（32位唯一标识）
         $fileKey = md5(uniqid('', true) . $storedName . $userId);
 
@@ -45,7 +89,7 @@ class File {
         );
         $stmt->execute([
             $userId,
-            $uploadedFile['name'],
+            $originalName,
             $storedName,
             filesize($destPath),
             $mimeType,

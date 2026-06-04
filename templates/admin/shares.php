@@ -41,6 +41,7 @@
     <div id="create-form" style="display:none;background:#fff;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
         <h3 style="margin-bottom:16px;font-size:16px;">创建分享链接</h3>
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
             <input type="hidden" name="create_share" value="1">
             
             <div class="form-group">
@@ -125,6 +126,7 @@
     </form>
 
     <form method="POST" action="" id="batch-form">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
     <?php if (empty($shares)): ?>
         <div style="text-align:center;color:#86868b;padding:80px;font-size:14px;background:#fff;border-radius:12px;">
             <?php if (!empty($_GET['search'])): ?>
@@ -150,7 +152,7 @@
                     <?php endif; ?>
                 </td>
                 <td>
-                    <?php $fullUrl = 'https://fx.5276.net/?action=share&token=' . $share['share_token']; ?>
+                    <?php $shareDomain = $shareDomain ?? ($_SERVER['HTTP_HOST'] ?? '127.0.0.1'); $fullUrl = 'https://' . $shareDomain . '/?action=share&token=' . $share['share_token']; ?>
                     <input type="text" value="<?= htmlspecialchars($fullUrl) ?>" id="share-url-<?= $share['id'] ?>" style="width:260px;padding:4px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:12px;color:#1d1d1f;" readonly>
                     <button onclick="copyShareUrl(<?= $share['id'] ?>)" style="padding:4px 10px;background:#007aff;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">复制</button>
                 </td>
