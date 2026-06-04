@@ -254,12 +254,12 @@ $dirsWritable = [
             if (!$configTemplate) throw new Exception('找不到配置模板 Config.example.php');
 
             $configContent = strtr($configTemplate, [
-                "'DB_NAME' => 'memobox'" => "'DB_NAME' => '" . addslashes($_POST['db_name']) . "'",
-                "'DB_USER' => 'memobox_user'" => "'DB_USER' => '" . addslashes($_POST['db_user']) . "'",
-                "'DB_PASS' => 'your_password_here'" => "'DB_PASS' => '" . addslashes($_POST['db_pass']) . "'",
-                "'DB_HOST' => '127.0.0.1'" => "'DB_HOST' => '" . addslashes($_POST['db_host']) . "'",
-                "'DB_PORT' => 3306" => "'DB_PORT' => " . (int)$_POST['db_port'],
-                "'ADMIN_PATH' => 'yunlian'" => "'ADMIN_PATH' => '" . $adminDir . "'",
+                'const DB_USER = "memobox_user";' => 'const DB_USER = "' . addslashes($_POST['db_user']) . '";',
+                'const DB_PASS = "your_password_here";' => 'const DB_PASS = "' . addslashes($_POST['db_pass']) . '";',
+                'const DB_NAME = "memobox";' => 'const DB_NAME = "' . addslashes($_POST['db_name']) . '";',
+                'const DB_HOST = "127.0.0.1";' => 'const DB_HOST = "' . addslashes($_POST['db_host']) . '";',
+                'const DB_PORT = 3306;' => 'const DB_PORT = ' . (int)$_POST['db_port'] . ';',
+                'const ADMIN_PATH = "yunlian";' => 'const ADMIN_PATH = "' . $adminDir . '";',
             ]);
 
             file_put_contents(__DIR__ . '/../../app/Config.php', $configContent);
