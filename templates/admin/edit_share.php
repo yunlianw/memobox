@@ -80,7 +80,7 @@
             <!-- 防手滑延迟销毁 -->
             <div id="edit-delay-field" style="margin-top:12px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:12px;<?= ($share['max_clicks'] == 1 || $share['destroy_delay'] > 0) ? '' : 'display:none;' ?>">
                 <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-                    <input type="checkbox" name="destroy_delay_enabled" value="1" <?= ($share['destroy_delay'] > 0) ? 'checked' : '' ?> onchange="toggleEditMinutes(this)">
+                    <input type="checkbox" name="destroy_delay_enabled" value="1" <?= ($share['destroy_delay'] > 0) ? 'checked' : '' ?> onchange="toggleEditDelayMinutes(this)">
                     🛡️ 防手滑延迟销毁
                 </label>
                 <div id="edit-delay-minutes" style="margin-top:8px;<?= ($share['destroy_delay'] > 0) ? '' : 'display:none;' ?>">
