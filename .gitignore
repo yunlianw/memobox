@@ -1,0 +1,17 @@
+.DS_Store
+Thumbs.db
+*.log
+*.lock
+config.php
+install.lock
+storage/files/*
+node_modules/
+vendor/
+.php-cs-fixer.cache
+.phpstorm.meta.php
+*.swp
+*.swo
+*~
+.env
+.idea/
+.vscode/
