@@ -4,8 +4,25 @@
  */
 
 // 防止重复安装
-if (file_exists(__DIR__ . '/../install.lock')) {
+if (file_exists(__DIR__ . '/../../install.lock')) {
     header('Location: /');
+    exit;
+}
+
+// 【最高优先级】AJAX 数据库测试（不依赖 step 参数，放在最开头）
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['db_host'])) {
+    header('Content-Type: application/json');
+    try {
+        $dsn = sprintf("mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4",
+            $_POST['db_host'], (int)$_POST['db_port'], $_POST['db_name']);
+        $pdo = new PDO($dsn, $_POST['db_user'], $_POST['db_pass'], [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_TIMEOUT => 5,
+        ]);
+        echo json_encode(['ok' => true, 'msg' => '数据库连接成功！']);
+    } catch (Exception $e) {
+        echo json_encode(['ok' => false, 'msg' => $e->getMessage()]);
+    }
     exit;
 }
 
@@ -75,7 +92,7 @@ $dirsWritable = [
         .info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
         .info-card .label { font-size: 12px; color: #94a3b8; }
         .info-card .value { font-size: 15px; font-weight: 600; margin-top: 2px; word-break: break-all; }
-        @media (max-width:480px) { .header { padding: 24px 16px; } .body { padding: 24px 16px; } }
+        @media (max-width: 480px) { .header { padding: 24px 16px; } .body { padding: 24px 16px; } }
     </style>
 </head>
 <body>
@@ -164,13 +181,13 @@ $dirsWritable = [
             msg.innerHTML = '<div class="msg msg-info">正在连接...</div>';
 
             var data = new URLSearchParams();
-            data.append('action', 'test_db');
-            var fields = ['db_host','db_port','db_name','db_user','db_pass'];
-            fields.forEach(function(f) {
-                data.append(f, document.querySelector('[name="'+f+'"]').value);
-            });
+            data.append('db_host', document.querySelector('[name="db_host"]').value);
+            data.append('db_port', document.querySelector('[name="db_port"]').value);
+            data.append('db_name', document.querySelector('[name="db_name"]').value);
+            data.append('db_user', document.querySelector('[name="db_user"]').value);
+            data.append('db_pass', document.querySelector('[name="db_pass"]').value);
 
-            fetch('?step=2', { method:'POST', body:data })
+            fetch(window.location.pathname, { method:'POST', body:data })
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res.ok) {
@@ -191,25 +208,6 @@ $dirsWritable = [
         }
         </script>
 
-        <?php
-        // AJAX 数据库测试
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'test_db') {
-            header('Content-Type: application/json');
-            try {
-                $dsn = sprintf("mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4",
-                    $_POST['db_host'], (int)$_POST['db_port'], $_POST['db_name']);
-                $pdo = new PDO($dsn, $_POST['db_user'], $_POST['db_pass'], [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_TIMEOUT => 5,
-                ]);
-                echo json_encode(['ok' => true, 'msg' => '数据库连接成功！']);
-            } catch (Exception $e) {
-                echo json_encode(['ok' => false, 'msg' => $e->getMessage()]);
-            }
-            exit;
-        }
-        ?>
-
         <?php elseif ($step === 3 && $_SERVER['REQUEST_METHOD'] === 'POST'): ?>
         <h2>👤 创建管理员</h2>
         <form method="post" action="?step=4" id="adminForm">
@@ -229,7 +227,7 @@ $dirsWritable = [
             </div>
             <div class="form-group">
                 <label>后台目录名（自定义）</label>
-                <input type="text" name="admin_dir" value="yunlian" required>
+                <input type="text" name="admin_dir" value="admin" required>
                 <p style="font-size:12px;color:#94a3b8;margin-top:4px">建议修改为不易猜测的名称，例如 admin、manage 等</p>
             </div>
 
@@ -245,11 +243,11 @@ $dirsWritable = [
         $adminUser = $_POST['admin_user'];
         $adminPass = $_POST['admin_pass'];
         $adminDir = preg_replace('/[^a-zA-Z0-9_]/', '', $_POST['admin_dir']);
-        if (empty($adminDir)) $adminDir = 'yunlian';
+        if (empty($adminDir)) $adminDir = 'admin';
 
         try {
             // 1. 生成 Config.php
-            $configTemplate = file_get_contents(__DIR__ . '/../app/Config.example.php');
+            $configTemplate = file_get_contents(__DIR__ . '/../../app/Config.example.php');
             if (!$configTemplate) throw new Exception('找不到配置模板 Config.example.php');
 
             $configContent = strtr($configTemplate, [
@@ -261,14 +259,13 @@ $dirsWritable = [
                 "'ADMIN_PATH' => 'yunlian'" => "'ADMIN_PATH' => '" . $adminDir . "'",
             ]);
 
-            file_put_contents(__DIR__ . '/../app/Config.php', $configContent);
+            file_put_contents(__DIR__ . '/../../app/Config.php', $configContent);
 
             // 2. 连接数据库执行 SQL
-            require_once __DIR__ . '/../app/Config.php';
+            require_once __DIR__ . '/../../app/Config.php';
             $pdo = Config::getDB();
 
             $sql = file_get_contents(__DIR__ . '/install.sql');
-            // 按行分割执行，跳过注释
             $lines = explode("\n", $sql);
             $buffer = '';
             foreach ($lines as $line) {
@@ -279,7 +276,6 @@ $dirsWritable = [
                     try {
                         $pdo->exec(trim($buffer));
                     } catch (Exception $e) {
-                        // 忽略 "表已存在" 类错误
                         if (stripos($e->getMessage(), 'already exists') === false) {
                             throw $e;
                         }
@@ -299,10 +295,10 @@ $dirsWritable = [
                 'admin_dir' => $adminDir,
                 'version' => '1.0.1',
             ], JSON_UNESCAPED_UNICODE);
-            file_put_contents(__DIR__ . '/../install.lock', $lockData);
+            file_put_contents(__DIR__ . '/../../install.lock', $lockData);
 
             // 5. 创建存储目录
-            $storageDir = __DIR__ . '/../storage/files/';
+            $storageDir = __DIR__ . '/../../storage/files/';
             if (!is_dir($storageDir)) {
                 mkdir($storageDir, 0755, true);
             }
