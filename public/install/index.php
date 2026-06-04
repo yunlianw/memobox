@@ -19,11 +19,11 @@ foreach ($extensions as $ext) {
     $checkResult[$ext] = extension_loaded($ext);
 }
 
-$storagePath = __DIR__ . '/../storage/files/';
+$storagePath = __DIR__ . '/../../storage/files/';
 $publicPath = __DIR__ . '/..';
 $dirsWritable = [
     'storage/files/' => is_writable($storagePath) || @mkdir($storagePath, 0755, true),
-    'app/' => is_writable(__DIR__ . '/../app/'),
+    'app/' => is_writable(__DIR__ . '/../../app/'),
     'public/' => is_writable($publicPath),
 ];
 ?>
