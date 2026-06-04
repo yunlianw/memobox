@@ -8,7 +8,10 @@ class Security {
      * 初始化Session并绑定设备指纹
      */
     public static function initSession(): void {
-        Config::init();
+        // 确保 session 已启动（但避免重复 Config::init()）
+        if (session_status() === PHP_SESSION_NONE) {
+            Config::init();
+        }
         
         if (!isset($_SESSION['fingerprint'])) {
             $_SESSION['fingerprint'] = [
