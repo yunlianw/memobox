@@ -15,6 +15,7 @@
     <a href="/<?= Config::ADMIN_PATH ?>/shares" class="active">分享管理</a>
     <a href="/<?= Config::ADMIN_PATH ?>/settings">设置</a>
 <a href="/<?= Config::ADMIN_PATH ?>/security">安全</a>
+    <a href="/<?= Config::ADMIN_PATH ?>/security">安全</a>
     </div>
 
 <div class="container">
@@ -42,6 +43,7 @@
     <div id="create-form" style="display:none;background:#fff;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
         <h3 style="margin-bottom:16px;font-size:16px;">创建分享链接</h3>
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
             <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
             <input type="hidden" name="create_share" value="1">
             
@@ -127,6 +129,7 @@
     </form>
 
     <form method="POST" action="" id="batch-form">
+            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
             <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
     <?php if (empty($shares)): ?>
         <div style="text-align:center;color:#86868b;padding:80px;font-size:14px;background:#fff;border-radius:12px;">

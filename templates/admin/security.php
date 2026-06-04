@@ -24,10 +24,10 @@
 <div class="container">
     <h2 style="font-size:20px;margin-bottom:20px;">🔒 安全设置</h2>
     
-    <?php if (isset($success)): ?>
+    <?php if (!empty($success)): ?>
     <div style="background:#d4edda;border:1px solid #c3e6cb;border-radius:8px;padding:12px;margin-bottom:20px;color:#155724;font-size:14px;"><?= htmlspecialchars($success) ?></div>
     <?php endif; ?>
-    <?php if (isset($error)): ?>
+    <?php if (!empty($error)): ?>
     <div style="background:#f8d7da;border:1px solid #f5c6cb;border-radius:8px;padding:12px;margin-bottom:20px;color:#721c24;font-size:14px;"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
     
