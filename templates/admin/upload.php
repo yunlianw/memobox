@@ -84,6 +84,7 @@ function uploadDirect(file) {
     var fd = new FormData();
     fd.append('file', file);
     fd.append('ajax', '1');
+    fd.append('csrf_token', '<?= Security::generateCsrfToken() ?>');
     
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/<?= Config::ADMIN_PATH ?>/upload');
@@ -141,6 +142,7 @@ function uploadChunks(file) {
         fd.append('chunk_total', total);
         fd.append('original_name', file.name);
         fd.append('mime_type', file.type || 'application/octet-stream');
+        fd.append('csrf_token', '<?= Security::generateCsrfToken() ?>');
         
         var xhr = new XMLHttpRequest();
         xhr.open('POST', '/<?= Config::ADMIN_PATH ?>/upload');
