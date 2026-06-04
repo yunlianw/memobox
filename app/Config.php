@@ -25,6 +25,9 @@ class Config {
     const TOKEN_LENGTH = 32;        // 分享Token长度
     const DEFAULT_PASS_LENGTH = 6;  // 默认密码长度
     
+    // 会话超时（秒），可在后台安全设置调整
+    const SESSION_TIMEOUT = 28800;   // 8小时
+    
     // 分享过期预设（秒）
     const EXPIRE_PRESETS = [
         '1h'   => 3600,
@@ -39,7 +42,7 @@ class Config {
         ini_set('session.cookie_httponly', '1');
         ini_set('session.use_strict_mode', '1');
         ini_set('session.cookie_samesite', 'Lax');
-        ini_set('session.gc_maxlifetime', '28800');  // 8小时后回收
+        ini_set('session.gc_maxlifetime', (string)self::SESSION_TIMEOUT);  // 会话超时时间
         
         if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
             ini_set('session.cookie_secure', '1');

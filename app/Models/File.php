@@ -11,15 +11,14 @@ class File {
     public static function upload(int $userId, array $uploadedFile): int {
         $pdo = Config::getDB();
         
-        // === 扩展名白名单验证 ===
-        $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp',
-            'pdf', 'doc', 'docx', 'xls', 'xlsx',
-            'zip', 'rar', '7z',
-            'mp4', 'mp3', 'webm', 'ogg',
-            'txt', 'md'];
+        // === 扩展名白名单验证（从数据库读取，可后台配置）===
+        require_once __DIR__ . '/Setting.php';
+        $allowedExtsRaw = Setting::get('allowed_exts', 'jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,zip,rar,7z,mp4,mp3,webm,ogg,txt,md');
+        $allowedExts = array_map('trim', explode(',', $allowedExtsRaw));
+        
         $ext = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
         if (!in_array($ext, $allowedExts)) {
-            throw new Exception('不允许的文件类型：' . htmlspecialchars($ext));
+            throw new Exception('不允许的文件类型：' . htmlspecialchars($ext) . '。允许的类型：' . htmlspecialchars($allowedExtsRaw));
         }
         
         // === 文件名安全处理（去除路径）===

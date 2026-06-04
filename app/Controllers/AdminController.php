@@ -53,6 +53,9 @@ class AdminController {
             case 'settings':
                 self::settings($query);
                 break;
+            case 'security':
+                self::security($query);
+                break;
             case 'logs':
                 self::logs($query);
                 break;
@@ -750,6 +753,61 @@ class AdminController {
         header("Content-Length: " . strlen($sqlContent));
         echo $sqlContent;
         exit;
+    }
+    
+    /**
+     * 安全设置页面
+     */
+    private static function security(array $query): void {
+        require_once __DIR__ . '/../Models/Setting.php';
+        require_once __DIR__ . '/../Config.php';
+        require_once __DIR__ . '/../Security.php';
+        
+        $allowedExts = Setting::get('allowed_exts', 'jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,zip,rar,7z,mp4,mp3,webm,ogg,txt,md');
+        $sessionTimeout = (int)Setting::get('session_timeout', 28800);
+        $passwordPolicy = (int)Setting::get('password_policy', 1);
+        
+        $success = '';
+        $error = '';
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $action = $_POST['action'] ?? '';
+            
+            if ($action === 'save_exts') {
+                $newExts = trim($_POST['allowed_exts'] ?? '');
+                $newExts = preg_replace('/\s+/', '', $newExts); // 去空格
+                $newExts = rtrim($newExts, ',');
+                Setting::set('allowed_exts', $newExts);
+                $allowedExts = $newExts;
+                $success = '文件扩展名白名单已更新';
+            } elseif ($action === 'save_session') {
+                $timeout = (int)($_POST['session_timeout'] ?? 28800);
+                $policy = isset($_POST['password_policy']) ? 1 : 0;
+                Setting::set('session_timeout', (string)$timeout);
+                Setting::set('password_policy', (string)$policy);
+                
+                // 同步更新 Config.php 常量（让 init() 直接读常量）
+                $configFile = __DIR__ . '/../Config.php';
+                $content = file_get_contents($configFile);
+                $newTimeout = "const SESSION_TIMEOUT = $timeout;";
+                $content = preg_replace('/const SESSION_TIMEOUT\s*=\s*\d+;/', $newTimeout, $content, -1, $count);
+                if ($count === 0) {
+                    // 常量不存在，添加
+                    $content = str_replace(
+                        "// Token配置\n    const TOKEN_LENGTH = 32;",
+                        "// Token配置\n    const TOKEN_LENGTH = 32;\n    const SESSION_TIMEOUT = $timeout;",
+                        $content
+                    );
+                }
+                file_put_contents($configFile, $content);
+                
+                $sessionTimeout = $timeout;
+                $passwordPolicy = $policy;
+                $success = '会话安全设置已更新';
+            }
+        }
+        
+        include __DIR__ . '/../../templates/admin/security.php';
     }
     
     /**

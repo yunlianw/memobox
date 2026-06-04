@@ -15,7 +15,8 @@
     <a href="/<?= Config::ADMIN_PATH ?>/shares">分享管理</a>
     <a href="/<?= Config::ADMIN_PATH ?>/logs" class="active">日志</a>
     <a href="/<?= Config::ADMIN_PATH ?>/settings">设置</a>
-</div>
+<a href="/<?= Config::ADMIN_PATH ?>/security">安全</a>
+    </div>
 
 <div class="container">
     <h2 style="font-size:20px;margin-bottom:20px;">📋 审计日志</h2>

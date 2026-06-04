@@ -14,7 +14,8 @@
     <a href="/<?= Config::ADMIN_PATH ?>/files">文件</a>
     <a href="/<?= Config::ADMIN_PATH ?>/shares">分享管理</a>
     <a href="/<?= Config::ADMIN_PATH ?>/settings">设置</a>
-</div>
+<a href="/<?= Config::ADMIN_PATH ?>/security">安全</a>
+    </div>
 <div class="container">
     <!-- 搜索栏 + 操作区 -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap;">

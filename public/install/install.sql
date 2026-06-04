@@ -107,6 +107,9 @@ INSERT INTO `system_settings` (`setting_key`, `setting_value`) VALUES
   ('homepage_html', ''),
   ('share_error_mode', 'default'),
   ('share_error_html', ''),
-  ('share_domain', '');
+  ('share_domain', ''),
+  ('allowed_exts', 'jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,zip,rar,7z,mp4,mp3,webm,ogg,txt,md'),
+  ('session_timeout', '28800'),
+  ('password_policy', '1');
 
 COMMIT;
