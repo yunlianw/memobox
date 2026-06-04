@@ -4,13 +4,6 @@
  * Nginx root 指向此目录
  */
 
-// 安装检测：如果 install.lock 不存在，跳转到安装程序
-$lockFile = __DIR__ . '/../install.lock';
-if (!file_exists($lockFile)) {
-    header('Location: /install/');
-    exit;
-}
-
 require_once __DIR__ . '/../app/Config.php';
 require_once __DIR__ . '/../app/Security.php';
 require_once __DIR__ . '/../app/Router.php';
