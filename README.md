@@ -6,11 +6,12 @@
 
 - 📝 Markdown 编辑器（SimpleMDE，实时预览）
 - 🔗 三种文档类型：Markdown / 链接跳转 / HTML 源码
-- 📂 文件上传、管理、预览
+- 📂 文件上传、管理、预览（支持切片上传大文件）
 - 🔒 分享控制：密码保护、过期时间、点击熔断、阅后即焚
 - 🕵️ 全场景伪装：首页伪装（404/自定义 HTML）、分享错误伪装
-- 🛡️ 安全防护：IP 封锁、自定义后台路径
-- 📊 访问日志统计
+- 🛡️ 安全防护：CSRF Token、IP 封锁、会话安全、自定义后台路径
+- 📊 访问日志统计 + 安全设置页面
+- 🔐 密码策略：强制大小写+数字，最少8位
 
 ## 📁 目录结构
 
@@ -20,9 +21,16 @@
 │   ├── Config.php          # 数据库及系统配置（安装时生成）
 │   ├── Config.example.php  # 配置模板
 │   ├── Router.php          # 路由分发器
-│   ├── Security.php        # 安全工具
-│   ├── Controllers/        # 控制器
-│   │   ├── AdminController.php  # 后台管理（需拆分，见二次开发）
+│   ├── Security.php        # 安全工具（CSRF/会话/XSS防护）
+│   ├── Controllers/        # 控制器（已拆分，均 < 400行）
+│   │   ├── AdminController.php  # 路由分发器 + 登录/登出（110行）
+│   │   ├── Admin/              # 后台子控制器
+│   │   │   ├── Dashboard.php   # 仪表盘（19行）
+│   │   │   ├── Document.php    # 文档管理（166行）
+│   │   │   ├── Share.php       # 分享管理（154行）
+│   │   │   ├── File.php        # 文件管理（185行）
+│   │   ├── Settings.php    # 设置+安全（143行）
+│   │   │   └── Log.php         # 审计日志（26行）
 │   │   ├── ShareController.php  # 分享处理器
 │   │   └── AuthController.php    # 认证相关
 │   ├── Models/             # 数据模型
@@ -39,12 +47,11 @@
 │   └── install/            # 安装向导
 ├── storage/files/           # 文件存储目录
 ├── templates/              # 视图模板
-│   ├── admin/              # 后台页面
+│   ├── admin/              # 后台页面（8个导航：仪表盘/文档/文件/分享管理/日志/设置/安全）
 │   └── share/              # 分享页面
 ├── CHANGELOG.md            # 更新日志
 ├── README.md               # 本文档
-├── SECURITY_AUDIT.md        # 安全审查报告
-└── LICENSE                 # 开源协议
+└── LICENSE                 # MIT 开源协议
 ```
 
 ## 🚀 安装教程
@@ -53,7 +60,7 @@
 
 **第一步：创建站点并上传源码**
 1. 宝塔 → 网站 → 添加站点（填你的域名）
-2. 进入站点根目录，上传 `memobox-v1.0.2.tar.gz`
+2. 进入站点根目录，上传 `memobox-v1.0.4.tar.gz`
 3. 解压，得到 `memobox/` 目录
 
 **第二步：设置运行目录**
@@ -88,8 +95,8 @@ location / {
 **第一步：上传源码**
 ```bash
 cd /www/wwwroot
-# 上传 memobox-v1.0.2.tar.gz 后解压
-tar xzf memobox-v1.0.2.tar.gz
+# 上传 memobox-v1.0.4.tar.gz 后解压
+tar xzf memobox-v1.0.4.tar.gz
 ```
 
 **第二步：配置 Nginx**
@@ -152,13 +159,16 @@ A：检查 `storage/files/` 目录权限是否为 `755`；确认 PHP `fileinfo` 
 **Q：后台目录名忘了？**
 A：打开 `app/Config.php`，找到 `ADMIN_PATH` 常量，值就是你的后台目录名。
 
+**Q：登录报 CSRF validation failed？**
+A：清除浏览器 Cookie 重试；检查 `Config.php` 的 `SESSION_TIMEOUT` 配置；确认 PHP session 目录可写。
+
 ---
 
 ## 🔧 二次开发指南
 
 ### 架构概要
 
-Memobox 采用**传统 MVC 分离模式**：
+Memobox 采用**传统 MVC 分离模式**，控制器已按功能拆分为独立子文件（均 < 400行）：
 
 | 层 | 目录 | 职责 |
 |----|------|------|
@@ -175,7 +185,14 @@ Memobox 采用**传统 MVC 分离模式**：
   → Nginx
     → public/index.php
         → Router::dispatch()
-              → 后台路由 → AdminController::xxx()
+              → 后台路由 → AdminController::dispatch()
+                    → AdminDashboard::render()        # 仪表盘
+                    → AdminDocument::handle()        # 文档管理
+                    → AdminShare::shares()           # 分享管理
+                    → AdminFile::handle()            # 文件管理
+                    → AdminSettings::settings()      # 系统设置
+                    → AdminSettings::security()      # 安全设置
+                    → AdminLog::render()             # 审计日志
               → 分享路由 → ShareController::handle()
               → 首页路由 → renderNginx404() / renderCustomHtml()
 ```
@@ -185,10 +202,17 @@ Memobox 采用**传统 MVC 分离模式**：
 #### 1. 添加新的后台页面
 
 **步骤：**
-1. 在 `AdminController.php` 中添加 `private static function newPage(array $query): void { ... }`
-2. 在 `dispatch()` 的后台路由部分添加 `case 'new_page': self::newPage($query); break;`
-3. 创建模板 `templates/admin/new_page.php`
-4. 在后台导航栏（`templates/admin/style.php` 添加链接
+1. 在 `app/Controllers/Admin/` 下新建 `NewPage.php`
+2. 创建类 `AdminNewPage`，添加 `public static function render(): void { ... }`
+3. 在 `AdminController.php` 的 `dispatch()` 中添加路由：
+   ```php
+   case 'new_page':
+       require_once __DIR__ . '/Admin/NewPage.php';
+       AdminNewPage::render();
+       break;
+   ```
+4. 创建模板 `templates/admin/new_page.php`
+5. 在后台导航栏（`templates/admin/style.php`）添加链接
 
 #### 2. 修改分享行为
 
@@ -201,7 +225,7 @@ Memobox 采用**传统 MVC 分离模式**：
 
 **步骤：**
 1. 在 `app/Models/Setting.php` 的 `install.sql` 中添加默认值
-2. 在 `AdminController.php` 的 `settings()` 方法中添加保存/读取逻辑
+2. 在 `app/Controllers/Admin/Settings.php` 的 `settings()` 方法中添加保存/读取逻辑
 3. 在 `templates/admin/settings.php` 中添加表单字段
 
 #### 4. 数据库迁移
@@ -214,25 +238,11 @@ Memobox 采用**传统 MVC 分离模式**：
 
 | 项目 | 规范 |
 |------|------|
-| **行数限制** | 单个 PHP 文件 ≤400 行（上帝文件禁止） |
+| **行数限制** | 单个 PHP 文件 ≤400 行（上帝文件禁止）✅ 已实现 |
 | **命名** | 类：PascalCase；方法/函数：camelCase；变量：snake_case |
 | **数据库** | 表名复数（documents, files）；字段名 snake_case；主键 `id` INT AUTO_INCREMENT |
-| **安全** | 所有 SQL 用 `prepare()` + 参数绑定；所有输出用 `htmlspecialchars()` |
+| **安全** | 所有 SQL 用 `prepare()` + 参数绑定；所有输出用 `htmlspecialchars()`；CSRF Token 验证 |
 | **注释** | 关键逻辑添加注释；公共方法写 PHPDoc |
-
-### 拆分计划（AdminController.php 当前 740 行）
-
-| 新文件 | 行数 | 职责 |
-|--------|------|------|
-| `AdminController.php` | ~100 | 主控制器（dispatch + login/logout） |
-| `Admin/Dashboard.php` | ~40 | 仪表盘 |
-| `Admin/Document.php` | ~120 | 文档 CRUD |
-| `Admin/Share.php` | ~150 | 分享管理 |
-| `Admin/File.php` | ~100 | 文件管理 |
-| `Admin/Settings.php` | ~80 | 系统设置 |
-| `Admin/Log.php` | ~90 | 日志查看 |
-
-**拆分时机**：下个大版本（v2.0.0）或用户明确要求时执行。
 
 ---
 
@@ -257,11 +267,16 @@ Memobox 采用**传统 MVC 分离模式**：
 
 ---
 
-## 🔒 安全审查
+## 🔒 安全特性（v1.0.4）
 
-详见 [SECURITY_AUDIT.md](SECURITY_AUDIT.md)
+✅ **CSRF Token 防护** — 所有后台 POST 操作验证 Token  
+✅ **XSS 防护** — HTML 预览用 iframe sandbox + CSP header  
+✅ **文件上传验证** — MIME 检测 + 扩展名白名单 + 图片二次验证  
+✅ **路径遍历防护** — `realpath()` + 前缀校验  
+✅ **会话安全** — HttpOnly + SameSite + 超时配置  
+✅ **调试信息泄漏** — 已删除敏感 header  
+✅ **分享密码传输** — POST 加密，不在 URL 暴露  
+✅ **密码策略** — 强制 ≥8位 + 大小写 + 数字  
+✅ **install.lock 加固** — JSON 完整性校验  
 
-**当前主要风险：**
-1. **无 CSRF Token**（中危）—— 建议下版本添加
-2. **无会话超时**（中危）—— 建议下版本添加
-3. 其余均为低危或信息级别，当前场景风险可控
+详见 [CHANGELOG.md](CHANGELOG.md) 查看完整更新历史。
