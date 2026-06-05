@@ -43,8 +43,9 @@ class Router {
         }
         
         // CSRF 验证：所有 POST 请求（排除登录接口）
+        // 登录是 POST 到 /yunlian（无 action 参数），其余后台操作必须带 csrf_token
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $isLogin = (strpos($path, '/' . Config::ADMIN_PATH) === 0 && isset($query['action']) && $query['action'] === 'login');
+            $isLogin = ($path === '/' . Config::ADMIN_PATH);
             if (!$isLogin) {
                 $csrfToken = $_POST['csrf_token'] ?? '';
                 if (!Security::verifyCsrfToken($csrfToken)) {

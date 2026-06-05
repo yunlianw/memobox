@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.3] - 2026-06-05
+
+### 🐛 Bug 修复
+
+- **登录页CSRF验证失败**：POST登录到 `/yunlian` 时报 `CSRF validation failed`。原因是 CSRF 排除登录的判断逻辑依赖 `?action=login` GET 参数，但登录表单是纯 POST 无 action 参数。修复：改为直接判断目标路径是否为 `/yunlian`（等登录路径）。
+
+---
+
 ## [1.0.2] - 2026-06-04
 
 ### 🔒 安全修复（9项）
