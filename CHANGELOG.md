@@ -5,6 +5,7 @@
 ### 🐛 Bug 修复
 
 - **登录页CSRF验证失败**：POST登录到 `/yunlian` 时报 `CSRF validation failed`。原因是 CSRF 排除登录的判断逻辑依赖 `?action=login` GET 参数，但登录表单是纯 POST 无 action 参数。修复：改为直接判断目标路径是否为 `/yunlian`（等登录路径）。
+- **安全设置页面报 Permission denied**：保存会话超时时 `AdminController.php` 试图用 `file_put_contents()` 写 `Config.php`，但文件属主为 root、www 用户无写权限。修复：`Config::init()` 改为从 `system_settings` 表读取 `session_timeout`（后台可配置），删除写文件逻辑，配置与代码分离。
 
 ---
 

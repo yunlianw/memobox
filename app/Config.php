@@ -42,7 +42,21 @@ class Config {
         ini_set('session.cookie_httponly', '1');
         ini_set('session.use_strict_mode', '1');
         ini_set('session.cookie_samesite', 'Lax');
-        ini_set('session.gc_maxlifetime', (string)self::SESSION_TIMEOUT);  // 会话超时时间
+        
+        // 会话超时：优先从数据库读取（后台可配置），否则用常量默认值
+        $timeout = self::SESSION_TIMEOUT;
+        try {
+            $pdo = self::getDB();
+            $stmt = $pdo->prepare("SELECT value FROM system_settings WHERE `key` = 'session_timeout' LIMIT 1");
+            $stmt->execute();
+            $row = $stmt->fetch();
+            if ($row && is_numeric($row['value'])) {
+                $timeout = (int)$row['value'];
+            }
+        } catch (\Exception $e) {
+            // 数据库未就绪时使用默认值
+        }
+        ini_set('session.gc_maxlifetime', (string)$timeout);
         
         if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
             ini_set('session.cookie_secure', '1');

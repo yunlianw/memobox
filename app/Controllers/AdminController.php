@@ -713,21 +713,7 @@ class AdminController {
                 Setting::set('session_timeout', (string)$timeout);
                 Setting::set('password_policy', (string)$policy);
                 
-                // 同步更新 Config.php 常量（让 init() 直接读常量）
-                $configFile = __DIR__ . '/../Config.php';
-                $content = file_get_contents($configFile);
-                $newTimeout = "const SESSION_TIMEOUT = $timeout;";
-                $content = preg_replace('/const SESSION_TIMEOUT\s*=\s*\d+;/', $newTimeout, $content, -1, $count);
-                if ($count === 0) {
-                    // 常量不存在，添加
-                    $content = str_replace(
-                        "// Token配置\n    const TOKEN_LENGTH = 32;",
-                        "// Token配置\n    const TOKEN_LENGTH = 32;\n    const SESSION_TIMEOUT = $timeout;",
-                        $content
-                    );
-                }
-                file_put_contents($configFile, $content);
-                
+                // 会话超时存入数据库，Config::init() 会自动从数据库读取
                 $sessionTimeout = $timeout;
                 $passwordPolicy = $policy;
                 $success = '会话安全设置已更新';

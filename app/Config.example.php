@@ -22,6 +22,9 @@ class Config {
     const TOKEN_LENGTH = 32;
     const DEFAULT_PASS_LENGTH = 6;
 
+    // 会话超时（秒），可在后台安全设置调整
+    const SESSION_TIMEOUT = 28800;   // 8小时
+
     const EXPIRE_PRESETS = [
         "1h"   => 3600,
         "6h"   => 21600,
@@ -31,7 +34,32 @@ class Config {
     ];
 
     public static function init(): void {
-        date_default_timezone_set("Asia/Shanghai");
+        // Session 安全配置
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.cookie_samesite', 'Lax');
+        
+        // 会话超时：优先从数据库读取（后台可配置），否则用常量默认值
+        $timeout = self::SESSION_TIMEOUT;
+        try {
+            $pdo = self::getDB();
+            $stmt = $pdo->prepare("SELECT value FROM system_settings WHERE `key` = 'session_timeout' LIMIT 1");
+            $stmt->execute();
+            $row = $stmt->fetch();
+            if ($row && is_numeric($row['value'])) {
+                $timeout = (int)$row['value'];
+            }
+        } catch (\Exception $e) {
+            // 数据库未就绪时使用默认值
+        }
+        ini_set('session.gc_maxlifetime', (string)$timeout);
+        
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+            ini_set('session.cookie_secure', '1');
+        }
+        
+        date_default_timezone_set('Asia/Shanghai');
+        
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
