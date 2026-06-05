@@ -69,3 +69,18 @@
 - IP 封锁（连续失败登录）
 - Parsedown Markdown 解析
 - 自定义后台路径
+
+## [1.0.4] - 2026-06-05
+
+### 🔧 工程化重构
+
+- **AdminController.php 拆分**：原 733 行大文件拆分为 7 个文件（均 < 400 行）
+  - `AdminController.php` — 路由分发器 + 登录/登出（110 行）
+  - `Admin/Dashboard.php` — 仪表盘（19 行）
+  - `Admin/Document.php` — 文档管理（95 行）
+  - `Admin/Share.php` — 分享管理（23 行）
+  - `Admin/File.php` — 文件管理（182 行）
+  - `Admin/Settings.php` — 系统设置 + 安全（170 行）
+  - `Admin/Log.php` — 审计日志（26 行）
+- 符合工程化开发红线：禁止上帝文件，强制模块化分层
+- 不影响现有功能，仅调整文件结构
