@@ -13,10 +13,11 @@
     <a href="/<?= Config::ADMIN_PATH ?>/documents">文档</a>
     <a href="/<?= Config::ADMIN_PATH ?>/files">文件</a>
     <a href="/<?= Config::ADMIN_PATH ?>/shares" class="active">分享管理</a>
+    <a href="/<?= Config::ADMIN_PATH ?>/logs">日志</a>
     <a href="/<?= Config::ADMIN_PATH ?>/settings">设置</a>
-<a href="/<?= Config::ADMIN_PATH ?>/security">安全</a>
     <a href="/<?= Config::ADMIN_PATH ?>/security">安全</a>
-    </div>
+        <a href="/<?= Config::ADMIN_PATH ?>/account">账户</a>
+</div>
 
 <div class="container">
     <?php if (isset($createdShare) && $createdShare): ?>

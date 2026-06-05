@@ -15,17 +15,16 @@
     <a href="/<?= Config::ADMIN_PATH ?>/shares">分享管理</a>
     <a href="/<?= Config::ADMIN_PATH ?>/logs">日志</a>
     <a href="/<?= Config::ADMIN_PATH ?>/settings" class="active">设置</a>
-<a href="/<?= Config::ADMIN_PATH ?>/security">安全</a>
     <a href="/<?= Config::ADMIN_PATH ?>/security">安全</a>
-    </div>
+</div>
 
 <div class="container">
     <h2 style="font-size:20px;margin-bottom:20px;">⚙️ 系统设置</h2>
     
-    <?php if (isset($success)): ?>
+    <?php if (!empty($success)): ?>
     <div style="background:#d4edda;border:1px solid #c3e6cb;border-radius:8px;padding:12px;margin-bottom:20px;color:#155724;font-size:14px;"><?= htmlspecialchars($success) ?></div>
     <?php endif; ?>
-    <?php if (isset($error)): ?>
+    <?php if (!empty($error)): ?>
     <div style="background:#f8d7da;border:1px solid #f5c6cb;border-radius:8px;padding:12px;margin-bottom:20px;color:#721c24;font-size:14px;"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
     
@@ -93,32 +92,11 @@
         </form>
     </div>
     
-    <!-- 账户设置 -->
+        <!-- 账户设置 -->
     <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04);margin-bottom:24px;">
         <h3 style="font-size:16px;margin-bottom:16px;">👤 账户设置</h3>
-        <form method="POST" action="">
-            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
-            <input type="hidden" name="csrf_token" value="<?= Security::generateCsrfToken() ?>">
-            <div class="form-group">
-                <label>当前用户名</label>
-                <input type="text" value="<?= htmlspecialchars($_SESSION['user']['username']) ?>" disabled style="width:100%;max-width:400px;padding:10px 14px;border:1px solid #d2d2d7;border-radius:10px;font-size:15px;background:#f5f5f7;">
-            </div>
-            <div class="form-group">
-                <label>新用户名（留空则不修改）</label>
-                <input type="text" name="new_username" minlength="3" maxlength="30" style="width:100%;max-width:400px;padding:10px 14px;border:1px solid #d2d2d7;border-radius:10px;font-size:15px;">
-            </div>
-            <div class="form-group">
-                <label>新密码（留空则不修改）</label>
-                <input type="password" name="new_password" minlength="6" style="width:100%;max-width:400px;padding:10px 14px;border:1px solid #d2d2d7;border-radius:10px;font-size:15px;">
-                <p style="font-size:12px;color:#86868b;margin-top:4px;">至少6位字符</p>
-            </div>
-            <div class="form-group">
-                <label>当前密码（必须填写以验证身份）</label>
-                <input type="password" name="current_password" required style="width:100%;max-width:400px;padding:10px 14px;border:1px solid #d2d2d7;border-radius:10px;font-size:15px;">
-                <p style="font-size:12px;color:#86868b;margin-top:4px;">修改用户名或密码前，必须验证当前密码</p>
-            </div>
-            <button type="submit" class="btn">保存修改</button>
-        </form>
+        <p style="font-size:14px;color:#86868b;margin-bottom:16px;">修改用户名或密码请点击以下按钮</p>
+        <a href="/<?= Config::ADMIN_PATH ?>/account" class="btn">修改账户信息</a>
     </div>
     
     <!-- 系统信息 -->

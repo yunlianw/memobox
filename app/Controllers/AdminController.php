@@ -16,6 +16,15 @@ class AdminController {
      * 路由分发
      */
     public static function dispatch(string $subPath, array $query): void {
+        // 登录请求优先处理（不检查登录状态）
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        $isLoginPost = ($_SERVER['REQUEST_METHOD'] === 'POST' && $subPath === '' && isset($_POST['username']));
+        
+        if ($isLoginPost) {
+            self::showLogin($query);
+            return;
+        }
+        
         // 检查登录
         if (!User::isLoggedIn()) {
             self::showLogin($query);
@@ -60,6 +69,10 @@ class AdminController {
             case 'security':
                 require_once __DIR__ . '/Admin/Settings.php';
                 AdminSettings::security($query);
+                break;
+            case 'account':
+                require_once __DIR__ . '/Admin/Account.php';
+                AdminAccount::render();
                 break;
             case 'logs':
                 require_once __DIR__ . '/Admin/Log.php';

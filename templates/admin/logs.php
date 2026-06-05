@@ -16,6 +16,7 @@
     <a href="/<?= Config::ADMIN_PATH ?>/logs" class="active">日志</a>
     <a href="/<?= Config::ADMIN_PATH ?>/settings">设置</a>
 <a href="/<?= Config::ADMIN_PATH ?>/security">安全</a>
+        <a href="/<?= Config::ADMIN_PATH ?>/account">账户</a>
     </div>
 
 <div class="container">

@@ -74,13 +74,47 @@
 
 ### 🔧 工程化重构
 
-- **AdminController.php 拆分**：原 733 行大文件拆分为 7 个文件（均 < 400 行）
+- **AdminController.php 拆分**：原 733 行大文件拆分为 7 个独立文件（均 < 400 行）
   - `AdminController.php` — 路由分发器 + 登录/登出（110 行）
   - `Admin/Dashboard.php` — 仪表盘（19 行）
-  - `Admin/Document.php` — 文档管理（95 行）
-  - `Admin/Share.php` — 分享管理（23 行）
-  - `Admin/File.php` — 文件管理（182 行）
-  - `Admin/Settings.php` — 系统设置 + 安全（170 行）
+  - `Admin/Document.php` — 文档管理（166 行）
+  - `Admin/Share.php` — 分享管理（154 行）
+  - `Admin/File.php` — 文件管理（185 行）
+  - `Admin/Settings.php` — 系统设置 + 安全（143 行）
   - `Admin/Log.php` — 审计日志（26 行）
 - 符合工程化开发红线：禁止上帝文件，强制模块化分层
 - 不影响现有功能，仅调整文件结构
+
+### ✨ 新增功能
+
+- **独立账户设置页面** `/yunlian/account`
+  - 修改用户名（需当前密码验证）
+  - 修改密码（需当前密码 + 新密码 + 确认新密码，二次确认）
+  - 密码策略跟随「安全设置」动态切换：
+    - 未勾选强制策略 → 至少 6 位
+    - 勾选强制策略 → 至少 8 位 + 大小写 + 数字
+- **后台导航栏统一 8 项**：仪表盘 / 文档 / 文件 / 分享管理 / 日志 / 设置 / 安全 / 账户
+- **设置页「账户设置」改为跳转按钮**，不再混在系统设置里
+
+### 🐛 Bug 修复
+
+1. **登录页「密码正确但显示密码错误」**
+   - 根因：`dispatch()` 开头检查 `!User::isLoggedIn()`，POST 登录请求被拦截直接显示登录页
+   - 修复：添加 `$isLoginPost` 判断，POST 登录优先处理
+
+2. **设置页显示空提示条（绿色 + 红色同屏）**
+   - 根因：`settings()` 初始化 `$success = ''; $error = ''`，模板用 `isset()` 判断，空字符串也算已设置
+   - 修复：删除初始化，`isset($success)` → `!empty($success)`
+
+3. **账户设置密码策略硬编码**
+   - 根因：`Account.php` 硬编码 `strlen≥8` + 大小写数字，不读取 `password_policy` 配置
+   - 修复：读取 `Setting::get('password_policy')`，动态切换策略
+
+4. **`Account.php` 缺少 `Setting.php` 引用**
+   - 修复：补上 `require_once __DIR__ . '/../../Models/Setting.php'`
+
+5. **分享管理页面路由修复** — `/yunlian/shares` 正常显示
+6. **文件上传页面路由修复** — `/yunlian/upload` 正常显示
+
+---
+
