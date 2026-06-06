@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.4] - 2026-06-06
+
+### 🐛 Bug 修复
+
+- **安装程序 `Config::getDB()` 未定义**：`Config.example.php` 缺少 `getDB()` 方法，导致步骤3→4执行SQL时报错。修复：补全 `Config.example.php` 的 `getDB()` 方法。
+- **`install.lock` 路径不一致**：验证、写入、检查三处路径不统一，修复后全部指向项目根目录 `__DIR__ . '/../../install.lock'`。
+- **安装步骤3→4 加载 Config.php 失败**：`require_once` 不会重新加载刚写入的文件，改为 `require`。
+
+### ✨ 新增
+
+- **一键删除安装目录**：安装完成页新增「删除安装目录」按钮，用户点击后递归删除 `public/install/`，不影响程序运行。
+
+---
+
 ## [1.0.3] - 2026-06-05
 
 ### 🐛 Bug 修复

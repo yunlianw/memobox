@@ -110,7 +110,7 @@ $dirsWritable = [
 <div class="container">
     <div class="header">
         <h1>📦 MemoBox 安装向导</h1>
-        <p>私密知识库系统 — 版本 1.0.1</p>
+        <p>私密知识库系统 — 版本 1.0.4</p>
     </div>
 
     <div class="steps">
@@ -305,7 +305,7 @@ $dirsWritable = [
             $lockData = json_encode([
                 'installed_at' => date('Y-m-d H:i:s'),
                 'admin_dir' => $adminDir,
-                'version' => '1.0.1',
+                'version' => '1.0.4',
             ], JSON_UNESCAPED_UNICODE);
             file_put_contents(__DIR__ . '/../../install.lock', $lockData);
 
