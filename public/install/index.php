@@ -4,8 +4,8 @@
  */
 
 // 防止重复安装：验证 install.lock 内容完整性
-// install.lock 位于项目根目录（public/ 的上级目录）
-$lockFile = dirname(__DIR__) . '/install.lock';
+// install.lock 位于项目根目录（public/install/../../install.lock）
+$lockFile = __DIR__ . '/../../install.lock';
 if (file_exists($lockFile)) {
     $lockData = json_decode(file_get_contents($lockFile), true);
     if (is_array($lockData) && isset($lockData['installed_at'])) {
