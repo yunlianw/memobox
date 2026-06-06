@@ -83,6 +83,13 @@ a.link:hover{text-decoration:underline}
             </table>
         <?php endif; ?>
     </div>
+
+    <!-- 系统信息 -->
+    <div style="margin-top:24px;background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,.04);display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#86868b;">
+        <span>MemoBox <strong style="color:#1d1d1f;">v<?= Config::VERSION ?></strong></span>
+        <span>PHP <?= PHP_VERSION ?></span>
+    </div>
+
 </div>
 
 </body>

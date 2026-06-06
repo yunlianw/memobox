@@ -27,6 +27,9 @@ class Config {
     
     // 会话超时（秒），可在后台安全设置调整
     const SESSION_TIMEOUT = 28800;   // 8小时
+
+    // 系统版本
+    const VERSION = '1.0.4';
     
     // 分享过期预设（秒）
     const EXPIRE_PRESETS = [
