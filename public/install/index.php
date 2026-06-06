@@ -4,7 +4,8 @@
  */
 
 // 防止重复安装：验证 install.lock 内容完整性
-$lockFile = __DIR__ . '/../../install.lock';
+// install.lock 位于项目根目录（public/ 的上级目录）
+$lockFile = dirname(__DIR__) . '/install.lock';
 if (file_exists($lockFile)) {
     $lockData = json_decode(file_get_contents($lockFile), true);
     if (is_array($lockData) && isset($lockData['installed_at'])) {
@@ -272,7 +273,8 @@ $dirsWritable = [
             file_put_contents(__DIR__ . '/../../app/Config.php', $configContent);
 
             // 2. 连接数据库执行 SQL
-            require_once __DIR__ . '/../../app/Config.php';
+            // 必须使用 require（非 require_once），因为 Config.php 刚被写入，需要重新加载
+            require __DIR__ . '/../../app/Config.php';
             $pdo = Config::getDB();
 
             $sql = file_get_contents(__DIR__ . '/install.sql');
@@ -317,6 +319,35 @@ $dirsWritable = [
         }
         ?>
 
+        <?php
+        // 处理删除安装目录请求
+        if (isset($_GET['action']) && $_GET['action'] === 'delete_install') {
+            $installDir = __DIR__;
+            $deleted = false;
+            $delMsg = '';
+            // 递归删除安装目录
+            if (is_dir($installDir)) {
+                $files = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($installDir, RecursiveDirectoryIterator::SKIP_DOTS),
+                    RecursiveIteratorIterator::CHILD_FIRST
+                );
+                foreach ($files as $file) {
+                    if ($file->isDir()) {
+                        @rmdir($file->getRealPath());
+                    } else {
+                        @unlink($file->getRealPath());
+                    }
+                }
+                $deleted = @rmdir($installDir);
+                $delMsg = $deleted ? '安装目录已成功删除！' : '删除失败，请手动删除 <code>public/install/</code> 目录。';
+            }
+            echo '<div class="msg ' . ($deleted ? 'msg-ok' : 'msg-err') . '">' . ($deleted ? '✅' : '❌') . ' ' . $delMsg . '</div>';
+            echo '<div class="actions" style="justify-content:center"><a href="/' . $adminDir . '/" class="btn">👉 进入后台</a></div>';
+            echo '</div></div></body></html>';
+            exit;
+        }
+        ?>
+
         <?php if ($error): ?>
             <div class="msg msg-err">❌ 安装失败：<?= htmlspecialchars($error) ?></div>
             <div class="actions">
@@ -327,9 +358,6 @@ $dirsWritable = [
                 <div class="big-icon">🎉</div>
                 <h2>安装完成！</h2>
                 <p>MemoBox 已成功安装部署。</p>
-                <div class="warning" style="background:#fff3cd;border:1px solid #ffecb5;border-radius:8px;padding:12px;margin:16px 0;font-size:13px;color:#856404;">
-                    ⚠️ <b>安全提示：</b>请手动删除 <code>/public/install/</code> 目录，防止被重新安装！
-                </div>
 
                 <div class="info-card">
                     <div class="label">后台地址</div>
@@ -345,6 +373,22 @@ $dirsWritable = [
                 </div>
 
                 <div class="msg msg-info">⚠️ 请妥善保管以上信息。首次登录后建议立即修改密码。</div>
+
+                <!-- 自动删除安装目录 -->
+                <div id="deleteBox" style="background:#fff3cd;border:1px solid #ffecb5;border-radius:8px;padding:12px;margin:16px 0;font-size:13px;color:#856404;">
+                    ⚠️ <b>安全提示：</b>安装目录 <code>public/install/</code> 可被删除，不影响程序运行。<br><br>
+                    <form method="post" action="?step=4&action=delete_install" style="margin:0">
+                        <input type="hidden" name="db_host" value="<?= htmlspecialchars($_POST['db_host'] ?? '') ?>">
+                        <input type="hidden" name="db_port" value="<?= htmlspecialchars($_POST['db_port'] ?? '') ?>">
+                        <input type="hidden" name="db_name" value="<?= htmlspecialchars($_POST['db_name'] ?? '') ?>">
+                        <input type="hidden" name="db_user" value="<?= htmlspecialchars($_POST['db_user'] ?? '') ?>">
+                        <input type="hidden" name="db_pass" value="<?= htmlspecialchars($_POST['db_pass'] ?? '') ?>">
+                        <input type="hidden" name="admin_user" value="<?= htmlspecialchars($_POST['admin_user'] ?? '') ?>">
+                        <input type="hidden" name="admin_pass" value="<?= htmlspecialchars($_POST['admin_pass'] ?? '') ?>">
+                        <input type="hidden" name="admin_dir" value="<?= htmlspecialchars($adminDir) ?>">
+                        <button type="submit" class="btn" style="background:#dc2626" onclick="this.textContent='删除中...';this.disabled=true">🗑️ 一键删除安装目录</button>
+                    </form>
+                </div>
 
                 <div class="actions" style="justify-content:center">
                     <a href="/<?= $adminDir ?>/" class="btn">👉 进入后台</a>
